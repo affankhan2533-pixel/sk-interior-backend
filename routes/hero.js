@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { alt, order } = req.body;
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = upload.getImageUrl(req.file);
     const slide = await HeroSlide.create({ imageUrl, alt, order: order || 0 });
     res.status(201).json(slide);
   } catch (err) {
@@ -28,7 +28,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
     const update = { ...req.body };
-    if (req.file) update.imageUrl = `/uploads/${req.file.filename}`;
+    if (req.file) update.imageUrl = upload.getImageUrl(req.file);
     const slide = await HeroSlide.findByIdAndUpdate(req.params.id, update, { new: true });
     res.json(slide);
   } catch (err) {
@@ -39,9 +39,8 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const slide = await HeroSlide.findByIdAndDelete(req.params.id);
-    if (slide?.imageUrl?.startsWith('/uploads/')) {
-      const fp = path.join(__dirname, '..', slide.imageUrl);
-      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    if (slide) {
+      await upload.deleteImage(slide.imageUrl);
     }
     res.json({ message: 'Deleted' });
   } catch (err) {

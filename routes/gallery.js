@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { title, category, description, order } = req.body;
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = upload.getImageUrl(req.file);
     const item = await Gallery.create({ title, category, description, order: order || 0, imageUrl });
     res.status(201).json(item);
   } catch (err) {
@@ -32,7 +32,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
     const update = { ...req.body };
-    if (req.file) update.imageUrl = `/uploads/${req.file.filename}`;
+    if (req.file) update.imageUrl = upload.getImageUrl(req.file);
     const item = await Gallery.findByIdAndUpdate(req.params.id, update, { new: true });
     res.json(item);
   } catch (err) {
@@ -44,9 +44,8 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const item = await Gallery.findByIdAndDelete(req.params.id);
-    if (item?.imageUrl?.startsWith('/uploads/')) {
-      const filePath = path.join(__dirname, '..', item.imageUrl);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (item) {
+      await upload.deleteImage(item.imageUrl);
     }
     res.json({ message: 'Deleted' });
   } catch (err) {

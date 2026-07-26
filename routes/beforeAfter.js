@@ -19,8 +19,8 @@ router.get('/', async (req, res) => {
 router.post('/', auth, upload.fields([{ name: 'before', maxCount: 1 }, { name: 'after', maxCount: 1 }]), async (req, res) => {
   try {
     const { title, location, order } = req.body;
-    const beforeImage = `/uploads/${req.files.before[0].filename}`;
-    const afterImage = `/uploads/${req.files.after[0].filename}`;
+    const beforeImage = upload.getImageUrl(req.files?.before?.[0]);
+    const afterImage = upload.getImageUrl(req.files?.after?.[0]);
     const item = await BeforeAfter.create({ title, location, beforeImage, afterImage, order: order || 0 });
     res.status(201).json(item);
   } catch (err) {
@@ -32,8 +32,8 @@ router.post('/', auth, upload.fields([{ name: 'before', maxCount: 1 }, { name: '
 router.put('/:id', auth, upload.fields([{ name: 'before', maxCount: 1 }, { name: 'after', maxCount: 1 }]), async (req, res) => {
   try {
     const update = { ...req.body };
-    if (req.files?.before) update.beforeImage = `/uploads/${req.files.before[0].filename}`;
-    if (req.files?.after) update.afterImage = `/uploads/${req.files.after[0].filename}`;
+    if (req.files?.before) update.beforeImage = upload.getImageUrl(req.files.before[0]);
+    if (req.files?.after) update.afterImage = upload.getImageUrl(req.files.after[0]);
     const item = await BeforeAfter.findByIdAndUpdate(req.params.id, update, { new: true });
     res.json(item);
   } catch (err) {
@@ -45,12 +45,12 @@ router.put('/:id', auth, upload.fields([{ name: 'before', maxCount: 1 }, { name:
 router.delete('/:id', auth, async (req, res) => {
   try {
     const item = await BeforeAfter.findByIdAndDelete(req.params.id);
-    ['beforeImage', 'afterImage'].forEach((key) => {
-      if (item?.[key]?.startsWith('/uploads/')) {
-        const fp = path.join(__dirname, '..', item[key]);
-        if (fs.existsSync(fp)) fs.unlinkSync(fp);
-      }
-    });
+    if (item) {
+      await Promise.all([
+        upload.deleteImage(item.beforeImage),
+        upload.deleteImage(item.afterImage)
+      ]);
+    }
     res.json({ message: 'Deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });

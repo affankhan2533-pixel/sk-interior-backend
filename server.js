@@ -9,6 +9,8 @@ const galleryRoutes = require('./routes/gallery');
 const beforeAfterRoutes = require('./routes/beforeAfter');
 const heroRoutes = require('./routes/hero');
 const bookingRoutes = require('./routes/booking');
+const testimonialRoutes = require('./routes/testimonial');
+const visitRoutes = require('./routes/visit');
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/gallery', galleryRoutes);
 app.use('/api/before-after', beforeAfterRoutes);
 app.use('/api/hero', heroRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/visits', visitRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
