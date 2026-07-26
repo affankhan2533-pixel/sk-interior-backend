@@ -14,8 +14,11 @@ const visitRoutes = require('./routes/visit');
 
 const app = express();
 
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const corsOrigin = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: corsOrigin,
   credentials: true
 }));
 app.use(express.json());
