@@ -53,6 +53,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/public', async (req, res) => {
+  try {
+    const { name, loc, project, rating, text } = req.body;
+    if (!name || !text) {
+      return res.status(400).json({ message: 'Name and review text are required' });
+    }
+    const testimonial = await Testimonial.create({
+      name,
+      loc: loc || 'Mumbai',
+      project: project || 'Residential Interior',
+      rating: Number(rating) || 5,
+      text,
+      order: 99
+    });
+    res.status(201).json(testimonial);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 router.post('/', auth, async (req, res) => {
   try {
     const { name, loc, project, rating, text, order } = req.body;
